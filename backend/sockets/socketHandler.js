@@ -399,6 +399,7 @@ const registerSocketHandlers = (io) => {
         if (imgEntry) {
           imgEntry.x = newX;
           imgEntry.y = newY;
+          room.markModified('canvasData');
           await room.save();
           console.log(`[Socket] Image position finalized | roomId=${roomId} | id=${imageId} | x=${newX} y=${newY}`);
         }
@@ -429,6 +430,7 @@ const registerSocketHandlers = (io) => {
         if (imgEntry) {
           imgEntry.width = newWidth;
           imgEntry.height = newHeight;
+          room.markModified('canvasData');
           await room.save();
           console.log(`[Socket] Image size finalized | roomId=${roomId} | id=${imageId} | ${newWidth}x${newHeight}`);
         }
@@ -499,7 +501,7 @@ const registerSocketHandlers = (io) => {
       }
 
       console.log(`[Socket] start-screen-share | roomId=${roomId} | userId=${userId}`);
-      
+
       // Notify everyone in the room that screen sharing has started
       io.to(roomId).emit("screen-share-started", { userId });
     });
@@ -510,7 +512,7 @@ const registerSocketHandlers = (io) => {
       if (!roomId) return;
 
       console.log(`[Socket] stop-screen-share | roomId=${roomId} | userId=${userId}`);
-      
+
       // Notify everyone in the room that screen sharing has stopped
       io.to(roomId).emit("screen-share-stopped", { userId });
     });

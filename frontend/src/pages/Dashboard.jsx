@@ -28,13 +28,13 @@ function Dashboard() {
 
     const fetchRecentSessions = async () => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('auth_token')
             const response = await fetch(`${API_URL}/api/rooms/recent`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            
+
             if (response.ok) {
                 const data = await response.json()
                 setRecentSessions(data)
@@ -48,13 +48,13 @@ function Dashboard() {
 
     const fetchSavedBoards = async () => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('auth_token')
             const response = await fetch(`${API_URL}/api/boards`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            
+
             if (response.ok) {
                 const data = await response.json()
                 setSavedBoards(data)
@@ -70,14 +70,14 @@ function Dashboard() {
         if (!confirm('Are you sure you want to delete this board?')) return
 
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('auth_token')
             const response = await fetch(`${API_URL}/api/boards/${boardId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            
+
             if (response.ok) {
                 setSavedBoards(prev => prev.filter(board => board._id !== boardId))
             }
@@ -89,13 +89,13 @@ function Dashboard() {
 
     const loadSavedBoard = async (boardId) => {
         try {
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('auth_token')
             const response = await fetch(`${API_URL}/api/boards/${boardId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             })
-            
+
             if (response.ok) {
                 const board = await response.json()
                 // Create a new room with the saved canvas data
@@ -149,7 +149,7 @@ function Dashboard() {
             </div>
 
             {/* Top Navigation */}
-            <div style={{...navStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(-20px)'}}>
+            <div style={{ ...navStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(-20px)' }}>
                 <div style={logoContainerStyle}>
                     <div style={logoIconStyle}>🎨</div>
                     <div style={logoStyle}>CollabSphere</div>
@@ -159,26 +159,26 @@ function Dashboard() {
                         <span style={{ fontSize: '0.8125rem', opacity: 0.6 }}>Welcome back,</span>
                         <span style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{user?.name || user?.email}</span>
                     </div>
-                    <button 
-                        onClick={() => navigate('/profile')} 
-                        style={iconButtonStyle} 
+                    <button
+                        onClick={() => navigate('/profile')}
+                        style={iconButtonStyle}
                         title="Profile"
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                         👤
                     </button>
-                    <button 
-                        onClick={toggleTheme} 
-                        style={iconButtonStyle} 
+                    <button
+                        onClick={toggleTheme}
+                        style={iconButtonStyle}
                         title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1) rotate(15deg)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                     >
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
-                    <button 
-                        onClick={handleLogout} 
+                    <button
+                        onClick={handleLogout}
                         style={logoutButtonStyle}
                         onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -190,7 +190,7 @@ function Dashboard() {
 
             {/* Main Content */}
             <div style={mainStyle}>
-                <div style={{...heroStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)'}}>
+                <div style={{ ...heroStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)' }}>
                     <div style={heroTagStyle}>
                         🚀 Collaborate in Real-Time
                     </div>
@@ -198,7 +198,7 @@ function Dashboard() {
                         Your Digital Whiteboard for Team Collaboration
                     </h1>
                     <p style={heroSubtitleStyle}>
-                        Create, share, and collaborate on ideas with your team in real-time. 
+                        Create, share, and collaborate on ideas with your team in real-time.
                         Draw, chat, and work together seamlessly from anywhere in the world.
                     </p>
                     <div style={heroStatsStyle}>
@@ -221,14 +221,14 @@ function Dashboard() {
 
                 {error && (
                     <div style={errorStyle} className="animate-fadeInDown">
-                        <span style={{fontSize: '1.25rem', marginRight: '0.5rem'}}>⚠️</span>
+                        <span style={{ fontSize: '1.25rem', marginRight: '0.5rem' }}>⚠️</span>
                         {error}
                     </div>
                 )}
 
                 <div style={actionsContainerStyle}>
                     {/* Create Room Card */}
-                    <div 
+                    <div
                         style={{
                             ...cardStyle,
                             opacity: mounted ? 1 : 0,
@@ -257,7 +257,7 @@ function Dashboard() {
                             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                         >
                             {loading ? (
-                                <span style={{display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center'}}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                     <span style={spinnerStyle}>⏳</span>
                                     Creating...
                                 </span>
@@ -268,7 +268,7 @@ function Dashboard() {
                     </div>
 
                     {/* Join Room Card */}
-                    <div 
+                    <div
                         style={{
                             ...cardStyle,
                             opacity: mounted ? 1 : 0,
@@ -296,8 +296,8 @@ function Dashboard() {
                                     style={inputStyle}
                                 />
                             </div>
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 style={secondaryButtonStyle}
                                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -309,13 +309,13 @@ function Dashboard() {
                 </div>
 
                 {/* Features Section - Enhanced */}
-                <div style={{...featuresContainerStyle, opacity: mounted ? 1 : 0, transitionDelay: '0.3s'}}>
+                <div style={{ ...featuresContainerStyle, opacity: mounted ? 1 : 0, transitionDelay: '0.3s' }}>
                     <h2 style={featuresSectionTitleStyle}>
                         ✨ What CollabSphere Offers
                     </h2>
                     <div style={featuresGridStyle}>
                         {/* Feature 1 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature1' ? 'translateY(-8px)' : 'translateY(0)',
@@ -331,7 +331,7 @@ function Dashboard() {
                         </div>
 
                         {/* Feature 2 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature2' ? 'translateY(-8px)' : 'translateY(0)',
@@ -347,7 +347,7 @@ function Dashboard() {
                         </div>
 
                         {/* Feature 3 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature3' ? 'translateY(-8px)' : 'translateY(0)',
@@ -363,7 +363,7 @@ function Dashboard() {
                         </div>
 
                         {/* Feature 4 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature4' ? 'translateY(-8px)' : 'translateY(0)',
@@ -379,7 +379,7 @@ function Dashboard() {
                         </div>
 
                         {/* Feature 5 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature5' ? 'translateY(-8px)' : 'translateY(0)',
@@ -395,7 +395,7 @@ function Dashboard() {
                         </div>
 
                         {/* Feature 6 */}
-                        <div 
+                        <div
                             style={{
                                 ...featureBoxStyle,
                                 transform: hoveredCard === 'feature6' ? 'translateY(-8px)' : 'translateY(0)',
@@ -413,198 +413,198 @@ function Dashboard() {
                 </div>
 
                 {/* History Section with Tabs */}
-                <div style={{...recentSessionsContainerStyle, opacity: mounted ? 1 : 0, transitionDelay: '0.4s'}}>
-                        <div style={recentHeaderStyle}>
-                            <h2 style={recentSessionsTitleStyle}>
-                                <span style={titleIconStyle}>📚</span>
-                                My Boards & Sessions
-                            </h2>
-                            <p style={recentSubtitleStyle}>Access your saved work and recent sessions</p>
-                        </div>
-
-                        {/* Tabs */}
-                        <div style={tabsContainerStyle}>
-                            <button
-                                style={{
-                                    ...tabButtonStyle,
-                                    ...(activeHistoryTab === 'saved' ? activeTabButtonStyle : {})
-                                }}
-                                onClick={() => setActiveHistoryTab('saved')}
-                            >
-                                💾 Saved Boards ({savedBoards.length})
-                            </button>
-                            <button
-                                style={{
-                                    ...tabButtonStyle,
-                                    ...(activeHistoryTab === 'recent' ? activeTabButtonStyle : {})
-                                }}
-                                onClick={() => setActiveHistoryTab('recent')}
-                            >
-                                🕒 Recent Sessions ({recentSessions.length})
-                            </button>
-                        </div>
-
-                        {/* Saved Boards Tab Content */}
-                        {activeHistoryTab === 'saved' && (
-                            <div style={tabContentStyle}>
-                                {savedBoards.length > 0 ? (
-                                    <div style={sessionsGridStyle}>
-                                        {savedBoards.slice(0, 6).map((board, index) => (
-                                            <div
-                                                key={board._id}
-                                                style={{
-                                                    ...sessionCardStyle,
-                                                    transform: hoveredCard === `board-${index}` ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
-                                                    boxShadow: hoveredCard === `board-${index}` ? '0 12px 24px rgba(99, 102, 241, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                                }}
-                                                onMouseEnter={() => setHoveredCard(`board-${index}`)}
-                                                onMouseLeave={() => setHoveredCard(null)}
-                                            >
-                                                <div style={sessionCardHeaderStyle}>
-                                                    <div style={sessionIconContainerStyle}>
-                                                        <span style={sessionCardIconStyle}>💾</span>
-                                                    </div>
-                                                    <div style={sessionTimeStyle}>
-                                                        {formatLastActive(board.updatedAt)}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style={sessionCardBodyStyle}>
-                                                    <div style={{
-                                                        fontSize: '1rem',
-                                                        fontWeight: 600,
-                                                        color: 'var(--text-color)',
-                                                        marginBottom: '0.5rem'
-                                                    }}>
-                                                        {board.title}
-                                                    </div>
-                                                    <div style={{
-                                                        fontSize: '0.75rem',
-                                                        color: 'var(--text-color)',
-                                                        opacity: 0.6
-                                                    }}>
-                                                        {board.canvasData?.length || 0} items
-                                                    </div>
-                                                </div>
-
-                                                <div style={sessionCardFooterStyle}>
-                                                    <button
-                                                        onClick={() => loadSavedBoard(board._id)}
-                                                        style={{
-                                                            padding: '0.5rem 1rem',
-                                                            borderRadius: '8px',
-                                                            border: 'none',
-                                                            background: 'var(--gradient-primary)',
-                                                            color: '#fff',
-                                                            fontSize: '0.8125rem',
-                                                            fontWeight: 600,
-                                                            cursor: 'pointer',
-                                                            flex: 1,
-                                                            transition: 'transform 0.2s'
-                                                        }}
-                                                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                                                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                                                    >
-                                                        Open →
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            deleteSavedBoard(board._id)
-                                                        }}
-                                                        style={{
-                                                            padding: '0.5rem',
-                                                            borderRadius: '8px',
-                                                            border: '1px solid var(--border-color)',
-                                                            background: 'transparent',
-                                                            color: '#ef4444',
-                                                            fontSize: '1rem',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s'
-                                                        }}
-                                                        title="Delete board"
-                                                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
-                                                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                                                    >
-                                                        🗑️
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div style={emptyStateStyle}>
-                                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💾</div>
-                                        <div style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                                            No saved boards yet
-                                        </div>
-                                        <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                                            Save your whiteboard work to access it later
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Recent Sessions Tab Content */}
-                        {activeHistoryTab === 'recent' && (
-                            <div style={tabContentStyle}>
-                                {recentSessions.length > 0 ? (
-                                    <div style={sessionsGridStyle}>
-                                        {recentSessions.slice(0, 6).map((session, index) => (
-                                            <div
-                                                key={session.roomId}
-                                                style={{
-                                                    ...sessionCardStyle,
-                                                    transform: hoveredCard === `session-${index}` ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
-                                                    boxShadow: hoveredCard === `session-${index}` ? '0 12px 24px rgba(99, 102, 241, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
-                                                }}
-                                                onMouseEnter={() => setHoveredCard(`session-${index}`)}
-                                                onMouseLeave={() => setHoveredCard(null)}
-                                                onClick={() => navigate(`/whiteboard/${session.roomId}`)}
-                                            >
-                                                <div style={sessionCardHeaderStyle}>
-                                                    <div style={sessionIconContainerStyle}>
-                                                        <span style={sessionCardIconStyle}>🎨</span>
-                                                    </div>
-                                                    <div style={sessionTimeStyle}>
-                                                        {formatLastActive(session.lastUpdated)}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style={sessionCardBodyStyle}>
-                                                    <div style={sessionRoomIdLabelStyle}>Room ID</div>
-                                                    <div style={sessionRoomIdValueStyle}>{session.roomId}</div>
-                                                </div>
-
-                                                <div style={sessionCardFooterStyle}>
-                                                    <div style={sessionStatsStyle}>
-                                                        <div style={sessionStatItemStyle}>
-                                                            <span style={statIconStyle}>👥</span>
-                                                            <span style={statValueStyle}>{session.participantsCount}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div style={sessionJoinButtonStyle}>
-                                                        Continue →
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div style={emptyStateStyle}>
-                                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🕒</div>
-                                        <div style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                                            No recent sessions
-                                        </div>
-                                        <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-                                            Your recent whiteboard sessions will appear here
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                <div style={{ ...recentSessionsContainerStyle, opacity: mounted ? 1 : 0, transitionDelay: '0.4s' }}>
+                    <div style={recentHeaderStyle}>
+                        <h2 style={recentSessionsTitleStyle}>
+                            <span style={titleIconStyle}>📚</span>
+                            My Boards & Sessions
+                        </h2>
+                        <p style={recentSubtitleStyle}>Access your saved work and recent sessions</p>
                     </div>
+
+                    {/* Tabs */}
+                    <div style={tabsContainerStyle}>
+                        <button
+                            style={{
+                                ...tabButtonStyle,
+                                ...(activeHistoryTab === 'saved' ? activeTabButtonStyle : {})
+                            }}
+                            onClick={() => setActiveHistoryTab('saved')}
+                        >
+                            💾 Saved Boards ({savedBoards.length})
+                        </button>
+                        <button
+                            style={{
+                                ...tabButtonStyle,
+                                ...(activeHistoryTab === 'recent' ? activeTabButtonStyle : {})
+                            }}
+                            onClick={() => setActiveHistoryTab('recent')}
+                        >
+                            🕒 Recent Sessions ({recentSessions.length})
+                        </button>
+                    </div>
+
+                    {/* Saved Boards Tab Content */}
+                    {activeHistoryTab === 'saved' && (
+                        <div style={tabContentStyle}>
+                            {savedBoards.length > 0 ? (
+                                <div style={sessionsGridStyle}>
+                                    {savedBoards.slice(0, 6).map((board, index) => (
+                                        <div
+                                            key={board._id}
+                                            style={{
+                                                ...sessionCardStyle,
+                                                transform: hoveredCard === `board-${index}` ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
+                                                boxShadow: hoveredCard === `board-${index}` ? '0 12px 24px rgba(99, 102, 241, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                            }}
+                                            onMouseEnter={() => setHoveredCard(`board-${index}`)}
+                                            onMouseLeave={() => setHoveredCard(null)}
+                                        >
+                                            <div style={sessionCardHeaderStyle}>
+                                                <div style={sessionIconContainerStyle}>
+                                                    <span style={sessionCardIconStyle}>💾</span>
+                                                </div>
+                                                <div style={sessionTimeStyle}>
+                                                    {formatLastActive(board.updatedAt)}
+                                                </div>
+                                            </div>
+
+                                            <div style={sessionCardBodyStyle}>
+                                                <div style={{
+                                                    fontSize: '1rem',
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-color)',
+                                                    marginBottom: '0.5rem'
+                                                }}>
+                                                    {board.title}
+                                                </div>
+                                                <div style={{
+                                                    fontSize: '0.75rem',
+                                                    color: 'var(--text-color)',
+                                                    opacity: 0.6
+                                                }}>
+                                                    {board.canvasData?.length || 0} items
+                                                </div>
+                                            </div>
+
+                                            <div style={sessionCardFooterStyle}>
+                                                <button
+                                                    onClick={() => loadSavedBoard(board._id)}
+                                                    style={{
+                                                        padding: '0.5rem 1rem',
+                                                        borderRadius: '8px',
+                                                        border: 'none',
+                                                        background: 'var(--gradient-primary)',
+                                                        color: '#fff',
+                                                        fontSize: '0.8125rem',
+                                                        fontWeight: 600,
+                                                        cursor: 'pointer',
+                                                        flex: 1,
+                                                        transition: 'transform 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                                                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                                                >
+                                                    Open →
+                                                </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        deleteSavedBoard(board._id)
+                                                    }}
+                                                    style={{
+                                                        padding: '0.5rem',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid var(--border-color)',
+                                                        background: 'transparent',
+                                                        color: '#ef4444',
+                                                        fontSize: '1rem',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    title="Delete board"
+                                                    onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'}
+                                                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={emptyStateStyle}>
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💾</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                                        No saved boards yet
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                                        Save your whiteboard work to access it later
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Recent Sessions Tab Content */}
+                    {activeHistoryTab === 'recent' && (
+                        <div style={tabContentStyle}>
+                            {recentSessions.length > 0 ? (
+                                <div style={sessionsGridStyle}>
+                                    {recentSessions.slice(0, 6).map((session, index) => (
+                                        <div
+                                            key={session.roomId}
+                                            style={{
+                                                ...sessionCardStyle,
+                                                transform: hoveredCard === `session-${index}` ? 'translateY(-4px) scale(1.02)' : 'translateY(0) scale(1)',
+                                                boxShadow: hoveredCard === `session-${index}` ? '0 12px 24px rgba(99, 102, 241, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                            }}
+                                            onMouseEnter={() => setHoveredCard(`session-${index}`)}
+                                            onMouseLeave={() => setHoveredCard(null)}
+                                            onClick={() => navigate(`/whiteboard/${session.roomId}`)}
+                                        >
+                                            <div style={sessionCardHeaderStyle}>
+                                                <div style={sessionIconContainerStyle}>
+                                                    <span style={sessionCardIconStyle}>🎨</span>
+                                                </div>
+                                                <div style={sessionTimeStyle}>
+                                                    {formatLastActive(session.lastUpdated)}
+                                                </div>
+                                            </div>
+
+                                            <div style={sessionCardBodyStyle}>
+                                                <div style={sessionRoomIdLabelStyle}>Room ID</div>
+                                                <div style={sessionRoomIdValueStyle}>{session.roomId}</div>
+                                            </div>
+
+                                            <div style={sessionCardFooterStyle}>
+                                                <div style={sessionStatsStyle}>
+                                                    <div style={sessionStatItemStyle}>
+                                                        <span style={statIconStyle}>👥</span>
+                                                        <span style={statValueStyle}>{session.participantsCount}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={sessionJoinButtonStyle}>
+                                                    Continue →
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={emptyStateStyle}>
+                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🕒</div>
+                                    <div style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                                        No recent sessions
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
+                                        Your recent whiteboard sessions will appear here
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )

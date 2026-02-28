@@ -9,12 +9,12 @@ const Whiteboard = () => {
     const { roomId } = useParams()
     const navigate = useNavigate()
     const { user } = useAuth()
-    
+
     // Get username from user object
     const USERNAME = user?.name || user?.username || 'Anonymous'
     const MY_USER_ID = user?.id || user?.email || 'anonymous'
     const ROOM_ID = roomId || 'default-room'
-    
+
     const canvasRef = useRef(null)
     const imageInputRef = useRef(null)
     const [isDrawing, setIsDrawing] = useState(false)
@@ -59,10 +59,11 @@ const Whiteboard = () => {
     const resizingImageRef = useRef(null)
     const selectedImageIdRef = useRef(null)
     const lastEmitRef = useRef(0)
+    const savedBoardDataRef = useRef(null)
 
     // Predefined colors
     const colorPalette = [
-        '#000000', '#FFFFFF', '#EF4444', '#F59E0B', '#10B981', 
+        '#000000', '#FFFFFF', '#EF4444', '#F59E0B', '#10B981',
         '#3B82F6', '#8B5CF6', '#EC4899', '#64748B'
     ]
 
@@ -115,11 +116,28 @@ const Whiteboard = () => {
 
     // Socket setup
     useEffect(() => {
+        // Check for saved board data BEFORE socket connects
+        const loadBoardData = sessionStorage.getItem('loadBoardData')
+        if (loadBoardData) {
+            try {
+                savedBoardDataRef.current = JSON.parse(loadBoardData)
+                sessionStorage.removeItem('loadBoardData')
+            } catch (error) {
+                console.error('Error loading board data:', error)
+            }
+        }
+
         const socket = connectSocket()
         socket.emit('join-room', { roomId: ROOM_ID, userId: MY_USER_ID })
 
         socket.on('load-canvas', (items) => {
             if (!Array.isArray(items)) return
+            // If we have saved board data, use that instead of the server's empty data
+            if (savedBoardDataRef.current) {
+                setCanvasData(savedBoardDataRef.current)
+                savedBoardDataRef.current = null
+                return
+            }
             setCanvasData(items)
         })
 
@@ -138,13 +156,13 @@ const Whiteboard = () => {
             const canvas = canvasRef.current
             if (!canvas) return
             const ctx = canvas.getContext('2d')
-            
+
             if (segment.isEraser) {
                 ctx.globalCompositeOperation = 'destination-out'
             } else {
                 ctx.globalCompositeOperation = 'source-over'
             }
-            
+
             ctx.beginPath()
             ctx.moveTo(segment.x0, segment.y0)
             ctx.lineTo(segment.x1, segment.y1)
@@ -178,12 +196,10 @@ const Whiteboard = () => {
 
         socket.on('host-mode-state', ({ enabled }) => {
             setHostModeEnabled(enabled)
-            updateCanDraw(enabled, myRole)
         })
 
         socket.on('host-mode-changed', ({ enabled }) => {
             setHostModeEnabled(enabled)
-            updateCanDraw(enabled, myRole)
         })
 
         socket.on('image-added', (imgObj) => {
@@ -192,7 +208,7 @@ const Whiteboard = () => {
         })
 
         socket.on('image-updated', ({ imageId, newX, newY }) => {
-            setCanvasData(prev => prev.map(item => 
+            setCanvasData(prev => prev.map(item =>
                 item.id === imageId ? { ...item, x: newX, y: newY } : item
             ))
         })
@@ -277,7 +293,7 @@ const Whiteboard = () => {
             try {
                 if (peerConnectionRef.current) {
                     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer))
-                    
+
                     // Process queued ICE candidates
                     while (iceCandidatesQueue.current.length > 0) {
                         const candidate = iceCandidatesQueue.current.shift()
@@ -334,18 +350,8 @@ const Whiteboard = () => {
     }, [canvasData])
 
     // Load saved board data if available
-    useEffect(() => {
-        const loadBoardData = sessionStorage.getItem('loadBoardData')
-        if (loadBoardData) {
-            try {
-                const boardData = JSON.parse(loadBoardData)
-                setCanvasData(boardData)
-                sessionStorage.removeItem('loadBoardData')
-            } catch (error) {
-                console.error('Error loading board data:', error)
-            }
-        }
-    }, [])
+    // Saved board data is now handled in the socket setup effect above
+    // via savedBoardDataRef to avoid race condition with load-canvas
 
     // Update canDraw based on host mode and role
     const updateCanDraw = (hostMode, role) => {
@@ -451,12 +457,12 @@ const Whiteboard = () => {
             img => pos.x >= img.x && pos.x <= img.x + img.width &&
                 pos.y >= img.y && pos.y <= img.y + img.height
         )
-        
+
         if (hit) {
             const handleX = hit.x + hit.width - HANDLE
             const handleY = hit.y + hit.height - HANDLE
             const isOnHandle = pos.x >= handleX && pos.x <= handleX + HANDLE * 2 &&
-                               pos.y >= handleY && pos.y <= handleY + HANDLE * 2
+                pos.y >= handleY && pos.y <= handleY + HANDLE * 2
 
             if (isOnHandle) {
                 resizingImageRef.current = {
@@ -485,13 +491,13 @@ const Whiteboard = () => {
         setIsDrawing(true)
 
         const ctx = canvasRef.current.getContext('2d')
-        
+
         if (activeTool === 'eraser') {
             ctx.globalCompositeOperation = 'destination-out'
         } else {
             ctx.globalCompositeOperation = 'source-over'
         }
-        
+
         ctx.beginPath()
         ctx.moveTo(pos.x, pos.y)
     }, [getPos, activeTool, canDraw])
@@ -506,9 +512,9 @@ const Whiteboard = () => {
             const newWidth = Math.max(50, startW + deltaX)
             const newHeight = Math.max(50, startH + deltaY)
 
-            ;[canvasItemsRef.current, imagesRef.current].forEach(arr =>
-                arr.forEach(i => { if (i.id === id) { i.width = newWidth; i.height = newHeight } })
-            )
+                ;[canvasItemsRef.current, imagesRef.current].forEach(arr =>
+                    arr.forEach(i => { if (i.id === id) { i.width = newWidth; i.height = newHeight } })
+                )
             redrawAll()
 
             const now = Date.now()
@@ -527,9 +533,9 @@ const Whiteboard = () => {
             const newX = pos.x - offsetX
             const newY = pos.y - offsetY
 
-            ;[canvasItemsRef.current, imagesRef.current].forEach(arr =>
-                arr.forEach(i => { if (i.id === id) { i.x = newX; i.y = newY } })
-            )
+                ;[canvasItemsRef.current, imagesRef.current].forEach(arr =>
+                    arr.forEach(i => { if (i.id === id) { i.x = newX; i.y = newY } })
+                )
             redrawAll()
 
             const now = Date.now()
@@ -560,12 +566,12 @@ const Whiteboard = () => {
             if (socket?.connected) {
                 socket.emit('draw-segment', {
                     roomId: ROOM_ID,
-                    segment: { 
-                        x0: prev.x, 
-                        y0: prev.y, 
-                        x1: pos.x, 
-                        y1: pos.y, 
-                        color: activeTool === 'eraser' ? '#ffffff' : color, 
+                    segment: {
+                        x0: prev.x,
+                        y0: prev.y,
+                        x1: pos.x,
+                        y1: pos.y,
+                        color: activeTool === 'eraser' ? '#ffffff' : color,
                         size: currentBrushSize,
                         isEraser: activeTool === 'eraser'
                     },
@@ -583,14 +589,14 @@ const Whiteboard = () => {
                 setCanvasData(prev => prev.map(item =>
                     item.id === id ? { ...item, width: img.width, height: img.height } : item
                 ))
-                
+
                 const socket = getSocket()
                 if (socket?.connected) {
-                    socket.emit('finalize-image-size', { 
-                        roomId: ROOM_ID, 
-                        imageId: id, 
-                        newWidth: img.width, 
-                        newHeight: img.height 
+                    socket.emit('finalize-image-size', {
+                        roomId: ROOM_ID,
+                        imageId: id,
+                        newWidth: img.width,
+                        newHeight: img.height
                     })
                 }
             }
@@ -605,14 +611,14 @@ const Whiteboard = () => {
                 setCanvasData(prev => prev.map(item =>
                     item.id === id ? { ...item, x: img.x, y: img.y } : item
                 ))
-                
+
                 const socket = getSocket()
                 if (socket?.connected) {
-                    socket.emit('finalize-image-position', { 
-                        roomId: ROOM_ID, 
-                        imageId: id, 
-                        newX: img.x, 
-                        newY: img.y 
+                    socket.emit('finalize-image-position', {
+                        roomId: ROOM_ID,
+                        imageId: id,
+                        newX: img.x,
+                        newY: img.y
                     })
                 }
             }
@@ -623,7 +629,7 @@ const Whiteboard = () => {
         if (!isDrawingRef.current) return
         isDrawingRef.current = false
         setIsDrawing(false)
-        
+
         const ctx = canvasRef.current.getContext('2d')
         ctx.closePath()
         ctx.globalCompositeOperation = 'source-over'
@@ -636,9 +642,9 @@ const Whiteboard = () => {
                 userId: MY_USER_ID,
                 isEraser: activeTool === 'eraser'
             }
-            
+
             setCanvasData(prev => [...prev, newStroke])
-            
+
             const socket = getSocket()
             if (socket?.connected) {
                 socket.emit('draw-stroke', {
@@ -689,7 +695,7 @@ const Whiteboard = () => {
                 try {
                     // Load PDF.js library dynamically
                     const pdfjsLib = window.pdfjsLib || await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js')
-                    
+
                     // Set worker
                     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
                         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
@@ -715,7 +721,7 @@ const Whiteboard = () => {
 
                     // Convert canvas to image data
                     const imageData = canvas.toDataURL('image/png')
-                    
+
                     const socket = getSocket()
                     if (socket?.connected) {
                         socket.emit('upload-image', { roomId: ROOM_ID, userId: MY_USER_ID, imageData })
@@ -791,20 +797,20 @@ const Whiteboard = () => {
                 alert('Canvas not found. Please try again.')
                 return
             }
-            
+
             // Create a temporary canvas with white background
             const tempCanvas = document.createElement('canvas')
             tempCanvas.width = canvas.width
             tempCanvas.height = canvas.height
             const tempCtx = tempCanvas.getContext('2d')
-            
+
             // Fill with white background
             tempCtx.fillStyle = '#ffffff'
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height)
-            
+
             // Draw the original canvas on top
             tempCtx.drawImage(canvas, 0, 0)
-            
+
             // Convert to blob and download
             tempCanvas.toBlob((blob) => {
                 if (!blob) {
@@ -830,7 +836,7 @@ const Whiteboard = () => {
             const title = prompt('Enter a name for this board:', `Board ${new Date().toLocaleDateString()}`)
             if (!title) return // User cancelled
 
-            const token = localStorage.getItem('token')
+            const token = localStorage.getItem('auth_token')
             if (!token) {
                 alert('❌ Not authenticated. Please login again.')
                 return
@@ -977,15 +983,15 @@ const Whiteboard = () => {
                         📋 Copy Room ID
                     </button>
                 </div>
-                
+
                 <div className="header-right">
                     <div className="online-indicator">
                         <span className="online-dot"></span>
                         <span>{onlineUsers.length} online</span>
                     </div>
-                    
-                    <button 
-                        className="header-icon-btn" 
+
+                    <button
+                        className="header-icon-btn"
                         onClick={() => imageInputRef.current?.click()}
                         title="Upload File (Images & PDF)"
                     >
@@ -998,11 +1004,11 @@ const Whiteboard = () => {
                         style={{ display: 'none' }}
                         onChange={handleImageUpload}
                     />
-                    
+
                     {/* Screen Share Button (Host Only) */}
                     {myRole === 'host' && (
-                        <button 
-                            className="header-icon-btn" 
+                        <button
+                            className="header-icon-btn"
                             onClick={isScreenSharing ? stopScreenShare : startScreenShare}
                             title={isScreenSharing ? 'Stop Screen Share' : 'Share Screen'}
                             style={{
@@ -1013,11 +1019,11 @@ const Whiteboard = () => {
                             {isScreenSharing ? '🛑' : '🖥️'}
                         </button>
                     )}
-                    
+
                     {/* Host Mode Toggle (Host Only) */}
                     {myRole === 'host' && (
-                        <button 
-                            className="header-icon-btn" 
+                        <button
+                            className="header-icon-btn"
                             onClick={toggleHostMode}
                             title={hostModeEnabled ? 'Host Mode: ON (Only you can draw)' : 'Host Mode: OFF (Everyone can draw)'}
                             style={{
@@ -1032,23 +1038,23 @@ const Whiteboard = () => {
                             {hostModeEnabled ? '🔒 HOST' : '🔓 ALL'}
                         </button>
                     )}
-                    
-                    <button 
-                        className="header-icon-btn" 
+
+                    <button
+                        className="header-icon-btn"
                         onClick={toggleTheme}
                         title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
                     >
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
-                    
-                    <button 
-                        className="header-icon-btn chat-toggle-btn" 
+
+                    <button
+                        className="header-icon-btn chat-toggle-btn"
                         onClick={() => setIsChatOpen(!isChatOpen)}
                         title={isChatOpen ? 'Close Chat' : 'Open Chat'}
                     >
                         💬
                     </button>
-                    
+
                     <button className="leave-btn" onClick={() => navigate('/dashboard')}>
                         🚪 Leave
                     </button>
@@ -1060,19 +1066,19 @@ const Whiteboard = () => {
                 <div className="left-toolbar" style={{ opacity: !canDraw ? 0.5 : 1, pointerEvents: !canDraw ? 'none' : 'auto' }}>
                     {/* Pencil Tool */}
                     <div className="tool-group">
-                        <button 
+                        <button
                             className={`tool-btn ${activeTool === 'pencil' ? 'active' : ''}`}
                             onClick={() => setActiveTool('pencil')}
                             title="Pencil"
                             disabled={!canDraw}
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                                <path d="M2 2l7.586 7.586"/>
+                                <path d="M12 19l7-7 3 3-7 7-3-3z" />
+                                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
+                                <path d="M2 2l7.586 7.586" />
                             </svg>
                         </button>
-                        
+
                         {/* Pencil Size Button */}
                         <div className="tool-dropdown">
                             <button
@@ -1083,7 +1089,7 @@ const Whiteboard = () => {
                             >
                                 <span className="size-text">{pencilSize}</span>
                             </button>
-                            
+
                             {showPencilSize && (
                                 <div className="size-dropdown" style={{ top: `${dropdownPosition.top}px` }}>
                                     <div className="size-label">Pencil Size</div>
@@ -1097,10 +1103,10 @@ const Whiteboard = () => {
                                                 setActiveTool('pencil')
                                             }}
                                         >
-                                            <div 
-                                                className="size-preview" 
-                                                style={{ 
-                                                    width: `${Math.min(size * 2, 20)}px`, 
+                                            <div
+                                                className="size-preview"
+                                                style={{
+                                                    width: `${Math.min(size * 2, 20)}px`,
                                                     height: `${Math.min(size * 2, 20)}px`,
                                                     backgroundColor: 'currentColor'
                                                 }}
@@ -1115,17 +1121,17 @@ const Whiteboard = () => {
 
                     {/* Eraser Tool */}
                     <div className="tool-group">
-                        <button 
+                        <button
                             className={`tool-btn ${activeTool === 'eraser' ? 'active' : ''}`}
                             onClick={() => setActiveTool('eraser')}
                             title="Eraser"
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M20 20H7L3 16l10-10 7 7-4 4"/>
-                                <path d="M10 10l4 4"/>
+                                <path d="M20 20H7L3 16l10-10 7 7-4 4" />
+                                <path d="M10 10l4 4" />
                             </svg>
                         </button>
-                        
+
                         {/* Eraser Size Button */}
                         <div className="tool-dropdown">
                             <button
@@ -1136,7 +1142,7 @@ const Whiteboard = () => {
                             >
                                 <span className="size-text">{eraserSize}</span>
                             </button>
-                            
+
                             {showEraserSize && (
                                 <div className="size-dropdown" style={{ top: `${dropdownPosition.top}px` }}>
                                     <div className="size-label">Eraser Size</div>
@@ -1150,10 +1156,10 @@ const Whiteboard = () => {
                                                 setActiveTool('eraser')
                                             }}
                                         >
-                                            <div 
-                                                className="size-preview" 
-                                                style={{ 
-                                                    width: `${Math.min(size, 24)}px`, 
+                                            <div
+                                                className="size-preview"
+                                                style={{
+                                                    width: `${Math.min(size, 24)}px`,
                                                     height: `${Math.min(size, 24)}px`,
                                                     backgroundColor: 'currentColor'
                                                 }}
@@ -1178,7 +1184,7 @@ const Whiteboard = () => {
                         >
                             <div className="color-preview" style={{ backgroundColor: color }}></div>
                         </button>
-                        
+
                         {showColorPicker && (
                             <div className="color-picker-dropdown" style={{ top: `${dropdownPosition.top}px` }}>
                                 <div className="color-label">Choose Color</div>
@@ -1187,7 +1193,7 @@ const Whiteboard = () => {
                                         <button
                                             key={c}
                                             className={`color-option ${color === c ? 'active' : ''}`}
-                                            style={{ 
+                                            style={{
                                                 backgroundColor: c,
                                                 border: c === '#FFFFFF' ? '2px solid #e5e7eb' : 'none'
                                             }}
@@ -1208,15 +1214,15 @@ const Whiteboard = () => {
 
                     <button className="tool-btn" onClick={handleUndo} title="Undo">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M3 7v6h6"/>
-                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+                            <path d="M3 7v6h6" />
+                            <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
                         </svg>
                     </button>
 
                     <button className="tool-btn" onClick={handleRedo} title="Redo">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 7v6h-6"/>
-                            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/>
+                            <path d="M21 7v6h-6" />
+                            <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7" />
                         </svg>
                     </button>
 
@@ -1224,31 +1230,31 @@ const Whiteboard = () => {
 
                     <button className="tool-btn" onClick={saveAsImage} title="Save as Image">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                     </button>
 
                     <button className="tool-btn" onClick={saveBoard} title="Save Board">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                            <polyline points="17 21 17 13 7 13 7 21"/>
-                            <polyline points="7 3 7 8 15 8"/>
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
                         </svg>
                     </button>
 
                     <div className="toolbar-divider"></div>
 
-                    <button 
-                        className="tool-btn" 
+                    <button
+                        className="tool-btn"
                         onClick={clearCanvas}
                         disabled={myRole !== 'host'}
                         title={myRole !== 'host' ? 'Only host can clear' : 'Clear Canvas'}
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                         </svg>
                     </button>
                 </div>
@@ -1278,11 +1284,11 @@ const Whiteboard = () => {
                             <span>Host Mode: Only host can draw</span>
                         </div>
                     )}
-                    
+
                     <canvas
                         ref={canvasRef}
                         className="drawing-canvas"
-                        style={{ 
+                        style={{
                             cursor: !canDraw ? 'not-allowed' : (isDrawing ? 'crosshair' : 'default'),
                             background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                             display: isViewingScreen ? 'none' : 'block',
@@ -1293,7 +1299,7 @@ const Whiteboard = () => {
                         onMouseUp={onMouseUp}
                         onMouseLeave={onMouseUp}
                     />
-                    
+
                     {/* Screen Share Viewer */}
                     {isViewingScreen && (
                         <div style={{
@@ -1355,13 +1361,13 @@ const Whiteboard = () => {
                     <div className="right-panel">
                         {/* Tabs */}
                         <div className="panel-tabs">
-                            <button 
+                            <button
                                 className={`tab-btn ${activeTab === 'chat' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('chat')}
                             >
                                 💬 Chat
                             </button>
-                            <button 
+                            <button
                                 className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('users')}
                             >
