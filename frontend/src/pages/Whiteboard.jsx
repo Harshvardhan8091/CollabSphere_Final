@@ -87,6 +87,15 @@ const Whiteboard = () => {
     const [hostModeEnabled, setHostModeEnabled] = useState(false)
     const [canDraw, setCanDraw] = useState(true)
 
+    // Mobile responsiveness state
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768)
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
     // Auto-scroll chat
     useEffect(() => {
         if (chatEndRef.current) {
@@ -102,9 +111,14 @@ const Whiteboard = () => {
         if (!canvas) return
         const ctx = canvas.getContext('2d')
         const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height)
-        const rightPanelWidth = isChatOpen ? 320 : 0
-        canvas.width = window.innerWidth - 72 - rightPanelWidth
-        canvas.height = window.innerHeight - 64
+
+        const mobileView = window.innerWidth < 768
+        const rightPanelWidth = (isChatOpen && !mobileView) ? 320 : 0
+        const leftToolbarWidth = mobileView ? 0 : 72
+        const topbarHeight = mobileView ? 56 : 64
+
+        canvas.width = window.innerWidth - leftToolbarWidth - rightPanelWidth
+        canvas.height = window.innerHeight - topbarHeight
         ctx.putImageData(snapshot, 0, 0)
     }, [isChatOpen])
 
@@ -978,16 +992,16 @@ const Whiteboard = () => {
             {/* Top Header */}
             <div className="whiteboard-header">
                 <div className="header-left">
-                    <span className="room-label">Room: {ROOM_ID}</span>
-                    <button className="copy-btn" onClick={copyRoomId} title="Copy Room ID">
-                        📋 Copy Room ID
+                    <span className="room-label">{isMobile ? `${ROOM_ID.substring(0, 8)}...` : `Room: ${ROOM_ID}`}</span>
+                    <button className={isMobile ? "header-icon-btn" : "copy-btn"} onClick={copyRoomId} title="Copy Room ID">
+                        📋 {!isMobile && 'Copy Room ID'}
                     </button>
                 </div>
 
                 <div className="header-right">
                     <div className="online-indicator">
                         <span className="online-dot"></span>
-                        <span>{onlineUsers.length} online</span>
+                        <span>{onlineUsers.length} {!isMobile && 'online'}</span>
                     </div>
 
                     <button
@@ -1055,15 +1069,15 @@ const Whiteboard = () => {
                         💬
                     </button>
 
-                    <button className="leave-btn" onClick={() => navigate('/dashboard')}>
-                        🚪 Leave
+                    <button className={isMobile ? "header-icon-btn" : "leave-btn"} style={isMobile ? { color: '#ef4444' } : {}} onClick={() => navigate('/dashboard')}>
+                        🚪 {!isMobile && 'Leave'}
                     </button>
                 </div>
             </div>
 
             <div className="whiteboard-content">
                 {/* Left Toolbar */}
-                <div className="left-toolbar" style={{ opacity: !canDraw ? 0.5 : 1, pointerEvents: !canDraw ? 'none' : 'auto' }}>
+                <div className={`left-toolbar ${isMobile ? 'mobile-toolbar' : ''}`} style={{ opacity: !canDraw ? 0.5 : 1, pointerEvents: !canDraw ? 'none' : 'auto' }}>
                     {/* Pencil Tool */}
                     <div className="tool-group">
                         <button
@@ -1292,12 +1306,17 @@ const Whiteboard = () => {
                             cursor: !canDraw ? 'not-allowed' : (isDrawing ? 'crosshair' : 'default'),
                             background: theme === 'dark' ? '#1a1a1a' : '#ffffff',
                             display: isViewingScreen ? 'none' : 'block',
-                            opacity: !canDraw ? 0.7 : 1
+                            opacity: !canDraw ? 0.7 : 1,
+                            touchAction: 'none'
                         }}
                         onMouseDown={onMouseDown}
                         onMouseMove={onMouseMove}
                         onMouseUp={onMouseUp}
                         onMouseLeave={onMouseUp}
+                        onTouchStart={(e) => { e.preventDefault(); onMouseDown(e); }}
+                        onTouchMove={(e) => { e.preventDefault(); onMouseMove(e); }}
+                        onTouchEnd={(e) => { e.preventDefault(); onMouseUp(e); }}
+                        onTouchCancel={(e) => { e.preventDefault(); onMouseUp(e); }}
                     />
 
                     {/* Screen Share Viewer */}
@@ -1356,9 +1375,9 @@ const Whiteboard = () => {
                     )}
                 </div>
 
-                {/* Right Panel */}
+                {/* Right Panel or Modal */}
                 {isChatOpen && (
-                    <div className="right-panel">
+                    <div className={isMobile ? "right-panel modal-view" : "right-panel"}>
                         {/* Tabs */}
                         <div className="panel-tabs">
                             <button
@@ -1373,6 +1392,11 @@ const Whiteboard = () => {
                             >
                                 👥 Users
                             </button>
+                            {isMobile && (
+                                <button className="close-panel-btn" onClick={() => setIsChatOpen(false)}>
+                                    ✕
+                                </button>
+                            )}
                         </div>
 
                         {/* Chat Tab */}
@@ -1445,6 +1469,18 @@ const Whiteboard = () => {
                     </div>
                 )}
             </div>
+
+            {/* Mobile Floating Buttons */}
+            {isMobile && !isChatOpen && (
+                <>
+                    <button className="mobile-floating-btn users-float-btn" onClick={() => { setActiveTab('users'); setIsChatOpen(true); }} title="Users">
+                        👥
+                    </button>
+                    <button className="mobile-floating-btn chat-float-btn" onClick={() => { setActiveTab('chat'); setIsChatOpen(true); }} title="Chat">
+                        💬
+                    </button>
+                </>
+            )}
         </div>
     )
 }
