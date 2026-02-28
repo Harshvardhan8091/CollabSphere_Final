@@ -1245,4 +1245,31 @@ const emptyStateStyle = {
     textAlign: 'center',
 }
 
+// Media query styles
+if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    Object.assign(navStyle, {
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '1rem',
+        padding: '1rem',
+    })
+    Object.assign(logoStyle, {
+        fontSize: '1.25rem',
+    })
+    Object.assign(actionsContainerStyle, {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        width: '90%',
+        margin: '0 auto',
+    })
+    Object.assign(cardStyle, {
+        width: '100%',
+        padding: '2rem 1.5rem',
+    })
+    Object.assign(heroTitleStyle, {
+        fontSize: '2rem',
+    })
+}
+
 export default Dashboard

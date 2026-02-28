@@ -117,8 +117,13 @@ const Whiteboard = () => {
         const leftToolbarWidth = mobileView ? 0 : 72
         const topbarHeight = mobileView ? 56 : 64
 
-        canvas.width = window.innerWidth - leftToolbarWidth - rightPanelWidth
-        canvas.height = window.innerHeight - topbarHeight
+        if (mobileView) {
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight * 0.65
+        } else {
+            canvas.width = window.innerWidth - leftToolbarWidth - rightPanelWidth
+            canvas.height = window.innerHeight - topbarHeight
+        }
         ctx.putImageData(snapshot, 0, 0)
     }, [isChatOpen])
 
@@ -127,6 +132,21 @@ const Whiteboard = () => {
         window.addEventListener('resize', resizeCanvas)
         return () => window.removeEventListener('resize', resizeCanvas)
     }, [resizeCanvas])
+
+    // Touch event handling for drawing (preventing scroll)
+    useEffect(() => {
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const handleTouchMove = (e) => {
+            if (isDrawingRef.current || draggingImageRef.current || resizingImageRef.current) {
+                e.preventDefault()
+            }
+        }
+
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false })
+        return () => canvas.removeEventListener('touchmove', handleTouchMove)
+    }, [])
 
     // Socket setup
     useEffect(() => {
@@ -1271,6 +1291,14 @@ const Whiteboard = () => {
                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                         </svg>
                     </button>
+                    {isMobile && (
+                        <>
+                            <div className="toolbar-divider"></div>
+                            <button className="tool-btn" style={{ color: '#ef4444' }} onClick={() => navigate('/dashboard')} title="Leave Room">
+                                🚪
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 {/* Canvas Area */}
@@ -1313,10 +1341,10 @@ const Whiteboard = () => {
                         onMouseMove={onMouseMove}
                         onMouseUp={onMouseUp}
                         onMouseLeave={onMouseUp}
-                        onTouchStart={(e) => { e.preventDefault(); onMouseDown(e); }}
-                        onTouchMove={(e) => { e.preventDefault(); onMouseMove(e); }}
-                        onTouchEnd={(e) => { e.preventDefault(); onMouseUp(e); }}
-                        onTouchCancel={(e) => { e.preventDefault(); onMouseUp(e); }}
+                        onTouchStart={onMouseDown}
+                        onTouchMove={onMouseMove}
+                        onTouchEnd={onMouseUp}
+                        onTouchCancel={onMouseUp}
                     />
 
                     {/* Screen Share Viewer */}
@@ -1377,7 +1405,7 @@ const Whiteboard = () => {
 
                 {/* Right Panel or Modal */}
                 {isChatOpen && (
-                    <div className={isMobile ? "right-panel modal-view" : "right-panel"}>
+                    <div className={isMobile ? `right-panel modal-view ${activeTab === 'chat' ? 'modal-chat' : 'modal-users'}` : "right-panel"}>
                         {/* Tabs */}
                         <div className="panel-tabs">
                             <button

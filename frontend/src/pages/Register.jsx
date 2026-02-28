@@ -101,7 +101,7 @@ function Register() {
                 <div style={gradientOrb3}></div>
             </div>
 
-            <div style={{...cardStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)'}}>
+            <div style={{ ...cardStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateY(0)' : 'translateY(20px)' }}>
                 <div style={logoContainerStyle}>
                     <div style={logoIconStyle}>🎨</div>
                     <h1 style={titleStyle}>CollabSphere</h1>
@@ -110,7 +110,7 @@ function Register() {
 
                 {error && (
                     <div style={errorStyle} className="animate-fadeInDown">
-                        <span style={{fontSize: '1.25rem', marginRight: '0.5rem'}}>⚠️</span>
+                        <span style={{ fontSize: '1.25rem', marginRight: '0.5rem' }}>⚠️</span>
                         {error}
                     </div>
                 )}
@@ -203,7 +203,7 @@ function Register() {
                         }}
                     >
                         {loading ? (
-                            <span style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={spinnerStyle}>⏳</span>
                                 Creating account...
                             </span>
@@ -460,6 +460,20 @@ const linkStyle = {
     textDecoration: 'none',
     fontWeight: 600,
     transition: 'opacity 0.2s ease',
+}
+
+// Media query styles
+if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    Object.assign(containerStyle, {
+        flexDirection: 'column',
+        gap: '2rem',
+        padding: '1rem',
+    })
+    Object.assign(cardStyle, {
+        width: '90%',
+        margin: '0 auto',
+        padding: '1.5rem',
+    })
 }
 
 export default Register

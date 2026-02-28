@@ -41,7 +41,7 @@ function Login() {
 
             // Store token and user data
             login(data.user, data.token)
-            
+
             // Redirect to dashboard
             navigate('/dashboard')
         } catch (err) {
@@ -104,7 +104,7 @@ function Login() {
             </div>
 
             {/* Left Side - Branding */}
-            <div style={{...brandingSideStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(-30px)'}}>
+            <div style={{ ...brandingSideStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(-30px)' }}>
                 <div style={brandingContentStyle}>
                     <div style={brandLogoStyle}>
                         <div style={brandIconStyle}>🎨</div>
@@ -134,7 +134,7 @@ function Login() {
             </div>
 
             {/* Right Side - Login Form */}
-            <div style={{...cardStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(30px)'}}>
+            <div style={{ ...cardStyle, opacity: mounted ? 1 : 0, transform: mounted ? 'translateX(0)' : 'translateX(30px)' }}>
                 <div style={formHeaderStyle}>
                     <h2 style={formTitleStyle}>Welcome Back</h2>
                     <p style={formSubtitleStyle}>Sign in to your account to continue</p>
@@ -142,7 +142,7 @@ function Login() {
 
                 {error && (
                     <div style={errorStyle} className="animate-fadeInDown">
-                        <span style={{fontSize: '1.25rem', marginRight: '0.5rem'}}>⚠️</span>
+                        <span style={{ fontSize: '1.25rem', marginRight: '0.5rem' }}>⚠️</span>
                         {error}
                     </div>
                 )}
@@ -203,12 +203,12 @@ function Login() {
                         onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                     >
                         {loading ? (
-                            <span style={{display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center'}}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                 <span style={spinnerStyle}>⏳</span>
                                 Signing in...
                             </span>
                         ) : (
-                            <span style={{display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center'}}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
                                 <span>Sign in</span>
                                 <span>→</span>
                             </span>
@@ -234,8 +234,8 @@ function Login() {
 
                 <p style={linkTextStyle}>
                     Don't have an account?{' '}
-                    <Link 
-                        to="/register" 
+                    <Link
+                        to="/register"
                         style={linkStyle}
                         onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
                         onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
@@ -573,7 +573,9 @@ if (typeof window !== 'undefined' && window.innerWidth < 768) {
         display: 'none', // Hide branding on mobile
     })
     Object.assign(cardStyle, {
-        padding: '2rem',
+        width: '90%',
+        margin: '0 auto',
+        padding: '1.5rem',
     })
 }
 
