@@ -25,12 +25,14 @@ const protect = async (req, res, next) => {
       throw new Error("Access denied. No token provided.");
     }
 
-    if (!JWT_SECRET) {
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!jwtSecret) {
       res.status(500);
       throw new Error("JWT_SECRET is not configured.");
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, jwtSecret);
 
     const user = await User.findById(decoded.id).select("-password");
 

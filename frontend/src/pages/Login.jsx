@@ -155,7 +155,7 @@ function Login() {
                             <input
                                 type="email"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
                                 required
                                 style={inputStyle}
                                 placeholder="you@example.com"
@@ -172,7 +172,7 @@ function Login() {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); if (error) setError(''); }}
                                 required
                                 style={inputStyle}
                                 placeholder="••••••••"

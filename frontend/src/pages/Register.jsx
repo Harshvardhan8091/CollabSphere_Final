@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
+import { useAuth } from '../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
@@ -15,6 +16,7 @@ function Register() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [mounted, setMounted] = useState(false)
     const navigate = useNavigate()
+    const { login } = useAuth()
 
     useEffect(() => {
         setMounted(true)
@@ -53,7 +55,12 @@ function Register() {
                 throw new Error(data.message || 'Registration failed')
             }
 
-            navigate('/login', { state: { message: 'Registration successful! Please login.' } })
+            if (data.user && data.token) {
+                login(data.user, data.token)
+                navigate('/dashboard')
+            } else {
+                navigate('/login', { state: { message: 'Registration successful! Please login.' } })
+            }
         } catch (err) {
             setError(err.message)
         } finally {
@@ -80,7 +87,8 @@ function Register() {
                 throw new Error(data.message || 'Google registration failed')
             }
 
-            navigate('/login', { state: { message: 'Registration successful! Please login.' } })
+            login(data.user, data.token)
+            navigate('/dashboard')
         } catch (err) {
             setError(err.message)
         } finally {

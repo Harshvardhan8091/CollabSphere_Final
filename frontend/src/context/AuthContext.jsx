@@ -15,16 +15,49 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    // Load token and user from localStorage on app start
+    // Load token and user from localStorage on app start and verify validity
     useEffect(() => {
-        const storedToken = localStorage.getItem('auth_token')
-        const storedUser = localStorage.getItem('auth_user')
-        
-        if (storedToken && storedUser) {
-            setToken(storedToken)
-            setUser(JSON.parse(storedUser))
+        const verifySession = async () => {
+            const storedToken = localStorage.getItem('auth_token')
+            const storedUser = localStorage.getItem('auth_user')
+
+            if (storedToken && storedUser) {
+                try {
+                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+                    const res = await fetch(`${API_URL}/api/auth/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${storedToken}`
+                        }
+                    })
+
+                    if (res.ok) {
+                        const currentUser = await res.json()
+                        setToken(storedToken)
+                        setUser(currentUser)
+                        localStorage.setItem('auth_user', JSON.stringify(currentUser))
+                    } else {
+                        // Token expired or invalid
+                        localStorage.removeItem('auth_token')
+                        localStorage.removeItem('auth_user')
+                        localStorage.removeItem('collab_user_id')
+                        setToken(null)
+                        setUser(null)
+                    }
+                } catch (err) {
+                    // On network error, trust stored session temporarily so app can work offline/reconnect
+                    try {
+                        setToken(storedToken)
+                        setUser(JSON.parse(storedUser))
+                    } catch (e) {
+                        setToken(null)
+                        setUser(null)
+                    }
+                }
+            }
+            setLoading(false)
         }
-        setLoading(false)
+
+        verifySession()
     }, [])
 
     const login = (userData, authToken) => {

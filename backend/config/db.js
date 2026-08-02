@@ -2,16 +2,17 @@
 
 const mongoose = require("mongoose");
 
-const MONGO_URI = process.env.MONGO_URI;
-
 const connectDB = async () => {
-  if (!MONGO_URI) {
+  const mongoUri = process.env.MONGO_URI;
+  if (!mongoUri) {
     console.warn("MONGO_URI is not set. Skipping MongoDB connection.");
     return;
   }
   try {
-    await mongoose.connect(MONGO_URI);
-    console.log("MongoDB connected");
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
   }

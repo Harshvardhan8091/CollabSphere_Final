@@ -4,40 +4,49 @@ const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";
 
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
-
-const generateToken = (userId, role) => {
-  if (!JWT_SECRET) {
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
     throw new Error("JWT_SECRET is not configured");
   }
-  return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return secret;
+};
+
+const generateToken = (userId, role) => {
+  const secret = getJwtSecret();
+  return jwt.sign({ id: userId, role }, secret, { expiresIn: JWT_EXPIRES_IN });
 };
 
 const googleAuth = async (req, res, next) => {
   try {
     const { credential } = req.body;
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
     if (!credential) {
       res.status(400);
       throw new Error("Google credential is required");
     }
 
-    if (!GOOGLE_CLIENT_ID) {
-      res.status(500);
-      throw new Error("Google OAuth is not configured");
+    if (!googleClientId || googleClientId === "your-google-client-id-here") {
+      res.status(400);
+      throw new Error("Google OAuth is not configured on the server. Please set GOOGLE_CLIENT_ID in backend .env");
     }
+
+    const client = new OAuth2Client(googleClientId);
 
     // Verify the Google token
     const ticket = await client.verifyIdToken({
       idToken: credential,
-      audience: GOOGLE_CLIENT_ID,
+      audience: googleClientId,
     });
 
     const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      res.status(401);
+      throw new Error("Invalid Google token payload");
+    }
     const { sub: googleId, email, name, picture } = payload;
 
     // Check if user exists
@@ -64,7 +73,9 @@ const googleAuth = async (req, res, next) => {
     const token = generateToken(user._id, user.role);
     res.status(200).json({ user, token });
   } catch (err) {
-    console.error("Google Auth Error:", err);
+    if (res.statusCode >= 500) {
+      console.error("Google Auth Error:", err);
+    }
     next(err);
   }
 };

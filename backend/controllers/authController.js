@@ -4,14 +4,19 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+  return secret;
+};
+
 const JWT_EXPIRES_IN = "7d";
 
 const generateToken = (userId, role) => {
-  if (!JWT_SECRET) {
-    throw new Error("JWT_SECRET is not configured");
-  }
-  return jwt.sign({ id: userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const secret = getJwtSecret();
+  return jwt.sign({ id: userId, role }, secret, { expiresIn: JWT_EXPIRES_IN });
 };
 
 const register = async (req, res, next) => {
@@ -21,12 +26,14 @@ const register = async (req, res, next) => {
       res.status(400);
       throw new Error("Name, email and password are required");
     }
-    const existingUser = await User.findOne({ email });
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: trimmedEmail });
     if (existingUser) {
       res.status(409);
       throw new Error("Email is already registered");
     }
-    const user = await User.create({ name, email, password, role });
+    const user = await User.create({ name: name.trim(), email: trimmedEmail, password, role });
     const token = generateToken(user._id, user.role);
     res.status(201).json({ user, token });
   } catch (err) {
@@ -41,11 +48,19 @@ const login = async (req, res, next) => {
       res.status(400);
       throw new Error("Email and password are required");
     }
-    const user = await User.findOne({ email }).select("+password");
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: trimmedEmail }).select("+password");
     if (!user) {
       res.status(401);
       throw new Error("Invalid email or password");
     }
+
+    if (!user.password) {
+      res.status(401);
+      throw new Error("This account was created using Google. Please sign in with Google.");
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       res.status(401);
